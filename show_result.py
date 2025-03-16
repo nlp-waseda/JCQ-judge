@@ -37,7 +37,7 @@ def save_radar_chart(df, file):
             x=1.1,
             y=1.0,
         ),
-        margin=dict(l=100, r=120, t=60, b=60),
+        margin=dict(l=100, r=120, t=20, b=20),
         width=800,
         height=600,
     )
