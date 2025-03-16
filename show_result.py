@@ -2,101 +2,49 @@ import argparse
 import os
 from pathlib import Path
 
-import matplotlib.pyplot as plt
-import numpy as np
 import pandas as pd
+import plotly.graph_objects as go
 
 
-def save_radar_chart_model_criterion(df, file):
-    models = df.index.to_list()
-    criteria = ["Fluency", "Flexibility", "Originality", "Elaboration"]
+def save_radar_chart(df, file):
+    fig = go.Figure()
 
-    angles = [n / len(criteria) * 2 * np.pi for n in range(len(criteria))]
-    angles += angles[:1]
+    for index, row in df.iterrows():
+        values = list(row) + [row[df.columns[0]]]
+        categories = list(df.columns) + [df.columns[0]]
 
-    fig, ax = plt.subplots(figsize=(8, 8), subplot_kw=dict(polar=True))
+        fig.add_trace(
+            go.Scatterpolar(
+                r=values,
+                theta=categories,
+                mode="lines+markers",
+                name=index,
+            )
+        )
 
-    for model in models:
-        values = df.loc[model].to_list()
-        values += values[:1]
-
-        ax.plot(angles, values, "o-", linewidth=2, label=model)
-
-    ax.set_theta_offset(np.pi / 2)
-    ax.set_theta_direction(-1)
-
-    ax.set_xticks(angles[:-1])
-    ax.set_xticklabels(criteria, fontsize=12)
-
-    ax.legend(loc="upper left", bbox_to_anchor=(1.1, 1.0))
-
-    os.makedirs(Path(file).parent, exist_ok=True)
-    plt.savefig(file, dpi=300, bbox_inches="tight")
-    plt.close()
-
-
-def save_radar_chart_model_task(df, file):
-    models = df.index.to_list()
-    tasks = [
-        "Unusual uses",
-        "Consequences",
-        "Just suppose",
-        "Situation",
-        "Common problem",
-        "Improvement",
-        "Imaginative stories",
-    ]
-
-    angles = [n / len(tasks) * 2 * np.pi for n in range(len(tasks))]
-    angles += angles[:1]
-
-    fig, ax = plt.subplots(figsize=(8, 8), subplot_kw=dict(polar=True))
-
-    for model in models:
-        values = df.loc[model].to_list()
-        values += values[:1]
-
-        ax.plot(angles, values, "o-", linewidth=2, label=model)
-
-    ax.set_theta_offset(np.pi / 2)
-    ax.set_theta_direction(-1)
-
-    ax.set_xticks(angles[:-1])
-    ax.set_xticklabels(tasks, fontsize=12)
-
-    ax.legend(loc="upper left", bbox_to_anchor=(1.1, 1.0))
+    fig.update_layout(
+        polar=dict(
+            radialaxis=dict(visible=True, range=[0, 5], tickfont=dict(size=14)),
+            angularaxis=dict(
+                tickfont=dict(size=14),
+                rotation=90,
+                direction="clockwise",
+            ),
+        ),
+        showlegend=True,
+        legend=dict(
+            font=dict(size=14),
+            x=1.1,
+            y=1.0,
+        ),
+        margin=dict(l=100, r=120, t=60, b=60),
+        width=800,
+        height=600,
+    )
 
     os.makedirs(Path(file).parent, exist_ok=True)
-    plt.savefig(file, dpi=300, bbox_inches="tight")
-    plt.close()
-
-
-def save_radar_chart_task_criterion(df, file):
-    tasks = df.index.to_list()
-    criteria = ["Fluency", "Flexibility", "Originality", "Elaboration"]
-
-    angles = [n / len(criteria) * 2 * np.pi for n in range(len(criteria))]
-    angles += angles[:1]
-
-    fig, ax = plt.subplots(figsize=(8, 8), subplot_kw=dict(polar=True))
-
-    for task in tasks:
-        values = df.loc[task].to_list()
-        values += values[:1]
-
-        ax.plot(angles, values, "o-", linewidth=2, label=task)
-
-    ax.set_theta_offset(np.pi / 2)
-    ax.set_theta_direction(-1)
-
-    ax.set_xticks(angles[:-1])
-    ax.set_xticklabels(criteria, fontsize=12)
-
-    ax.legend(loc="upper left", bbox_to_anchor=(1.1, 1.0))
-
-    os.makedirs(Path(file).parent, exist_ok=True)
-    plt.savefig(file, dpi=300, bbox_inches="tight")
-    plt.close()
+    fig.write_image(file, scale=2)
+    print(f"\nSaved radar chart at {file}")
 
 
 if __name__ == "__main__":
@@ -116,30 +64,39 @@ if __name__ == "__main__":
     if args.model_list is not None:
         judgements = judgements[judgements["model"].isin(args.model_list)]
 
-    qj = pd.merge(questions, judgements, left_on="id", right_on="question_id")
-    qj.drop(columns="question_id")
-
-    qj["mean"] = qj[["fluency", "flexibility", "originality", "elaboration"]].mean(
+    df = pd.merge(questions, judgements, left_on="id", right_on="question_id")
+    df["mean"] = df[["fluency", "flexibility", "originality", "elaboration"]].mean(
         axis=1
     )
+    df = df[
+        [
+            "task",
+            "model",
+            "fluency",
+            "flexibility",
+            "originality",
+            "elaboration",
+            "mean",
+        ]
+    ]
 
     radar_chart_directory = "data/model_judgement/radar_chart"
 
     print("\n########## Model and Criterion ##########")
-    result_model_criterion = qj.groupby("model")[
+    result_model_criterion = df.groupby("model")[
         ["fluency", "flexibility", "originality", "elaboration", "mean"]
     ].mean()
     result_model_criterion.index.name = None
+    result_model_criterion.columns = result_model_criterion.columns.str.capitalize()
     print(result_model_criterion.round(2))
 
-    radar_chart_file = f"{radar_chart_directory}/{args.judge_model}_model_criterion.png"
-    save_radar_chart_model_criterion(
-        result_model_criterion.drop(columns="mean"), radar_chart_file
+    save_radar_chart(
+        result_model_criterion.drop(columns="Mean"),
+        f"{radar_chart_directory}/{args.judge_model}_model_criterion.png",
     )
-    print(f"\nSaved radar chart at {radar_chart_file}")
 
     print("\n########## Model and Task ##########")
-    result_model_task = qj.pivot_table(
+    result_model_task = df.pivot_table(
         values="mean", index="model", columns="task", aggfunc="mean"
     )
     result_model_task = result_model_task[
@@ -153,24 +110,38 @@ if __name__ == "__main__":
             "imaginative stories",
         ]
     ]
-    result_model_task["all"] = result_model_criterion["mean"]
+    result_model_task["all"] = result_model_criterion["Mean"]
     result_model_task.index.name = None
     result_model_task.columns.name = None
+    result_model_task.columns = result_model_task.columns.str.capitalize()
     print(result_model_task.round(2))
 
-    radar_chart_file = f"{radar_chart_directory}/{args.judge_model}_model_task.png"
-    save_radar_chart_model_task(result_model_task.drop(columns="all"), radar_chart_file)
-    print(f"\nSaved radar chart at {radar_chart_file}")
+    save_radar_chart(
+        result_model_task.drop(columns="All"),
+        f"{radar_chart_directory}/{args.judge_model}_model_task.png",
+    )
 
     print("\n########## Task and Criterion ##########")
-    result_task_criterion = qj.groupby("task")[
+    result_task_criterion = df.groupby("task")[
         ["fluency", "flexibility", "originality", "elaboration", "mean"]
     ].mean()
+    result_task_criterion = result_task_criterion.loc[
+        [
+            "unusual uses",
+            "consequences",
+            "just suppose",
+            "situation",
+            "common problem",
+            "improvement",
+            "imaginative stories",
+        ]
+    ]
     result_task_criterion.index.name = None
+    result_task_criterion.index = result_task_criterion.index.str.capitalize()
+    result_task_criterion.columns = result_task_criterion.columns.str.capitalize()
     print(result_task_criterion.round(2))
 
-    radar_chart_file = f"{radar_chart_directory}/{args.judge_model}_task_criterion.png"
-    save_radar_chart_task_criterion(
-        result_task_criterion.drop(columns="mean"), radar_chart_file
+    save_radar_chart(
+        result_task_criterion.drop(columns="Mean"),
+        f"{radar_chart_directory}/{args.judge_model}_task_criterion.png",
     )
-    print(f"\nSaved radar chart at {radar_chart_file}")
