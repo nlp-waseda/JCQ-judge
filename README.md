@@ -6,6 +6,7 @@ Japanese Creativity Questions (JCQ)に対する LLM による回答と、LLM-as-
 
 ```
 git clone https://github.com/nlp-waseda/JCQ-judge.git
+cd JCQ-judge
 pip install -r requirements.txt
 ```
 
