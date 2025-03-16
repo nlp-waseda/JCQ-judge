@@ -9,7 +9,7 @@ import pandas as pd
 
 def save_radar_chart_model_criterion(df, file):
     models = df.index.to_list()
-    criteria = ["fluency", "flexibility", "originality", "elaboration"]
+    criteria = ["Fluency", "Flexibility", "Originality", "Elaboration"]
 
     angles = [n / len(criteria) * 2 * np.pi for n in range(len(criteria))]
     angles += angles[:1]
@@ -26,7 +26,7 @@ def save_radar_chart_model_criterion(df, file):
     ax.set_theta_direction(-1)
 
     ax.set_xticks(angles[:-1])
-    ax.set_xticklabels(criteria)
+    ax.set_xticklabels(criteria, fontsize=12)
 
     ax.legend(loc="upper left", bbox_to_anchor=(1.1, 1.0))
 
@@ -38,13 +38,13 @@ def save_radar_chart_model_criterion(df, file):
 def save_radar_chart_model_task(df, file):
     models = df.index.to_list()
     tasks = [
-        "unusual uses",
-        "consequences",
-        "just suppose",
-        "situation",
-        "common problem",
-        "improvement",
-        "imaginative stories",
+        "Unusual uses",
+        "Consequences",
+        "Just suppose",
+        "Situation",
+        "Common problem",
+        "Improvement",
+        "Imaginative stories",
     ]
 
     angles = [n / len(tasks) * 2 * np.pi for n in range(len(tasks))]
@@ -62,7 +62,7 @@ def save_radar_chart_model_task(df, file):
     ax.set_theta_direction(-1)
 
     ax.set_xticks(angles[:-1])
-    ax.set_xticklabels(tasks)
+    ax.set_xticklabels(tasks, fontsize=12)
 
     ax.legend(loc="upper left", bbox_to_anchor=(1.1, 1.0))
 
@@ -73,7 +73,7 @@ def save_radar_chart_model_task(df, file):
 
 def save_radar_chart_task_criterion(df, file):
     tasks = df.index.to_list()
-    criteria = ["fluency", "flexibility", "originality", "elaboration"]
+    criteria = ["Fluency", "Flexibility", "Originality", "Elaboration"]
 
     angles = [n / len(criteria) * 2 * np.pi for n in range(len(criteria))]
     angles += angles[:1]
@@ -90,7 +90,7 @@ def save_radar_chart_task_criterion(df, file):
     ax.set_theta_direction(-1)
 
     ax.set_xticks(angles[:-1])
-    ax.set_xticklabels(criteria)
+    ax.set_xticklabels(criteria, fontsize=12)
 
     ax.legend(loc="upper left", bbox_to_anchor=(1.1, 1.0))
 
@@ -142,6 +142,17 @@ if __name__ == "__main__":
     result_model_task = qj.pivot_table(
         values="mean", index="model", columns="task", aggfunc="mean"
     )
+    result_model_task = result_model_task[
+        [
+            "unusual uses",
+            "consequences",
+            "just suppose",
+            "situation",
+            "common problem",
+            "improvement",
+            "imaginative stories",
+        ]
+    ]
     result_model_task["all"] = result_model_criterion["mean"]
     result_model_task.index.name = None
     result_model_task.columns.name = None

@@ -1,6 +1,6 @@
 # JCQ-judge
 
-Japanese Creativity Questions (JCQ)に対する LLM による回答と、LLM-as-a-judge による評価を行います。「流暢性」、「柔軟性」、「独創性」、「精緻性」の 4 指標を 1 ～ 5 のスケールで評価します。データセットや評価指標の詳細については[Huggingface のリポジトリ](https://huggingface.co/datasets/nlp-waseda/JCQ)や[論文](https://www.anlp.jp/proceedings/annual_meeting/2025/pdf_dir/C1-2.pdf)を参照してください。ローカルでモデルを動かす際は vLLM を用います。Python 3.9.18, CUDA 11.8.0 で動作確認を行いました。それ以外のバージョンでは依存パッケージの調整が必要な場合があります。
+Japanese Creativity Questions (JCQ)に対する LLM による回答と、LLM-as-a-judge による評価を行います。「流暢性」、「柔軟性」、「独創性」、「精緻性」の 4 指標を 1 ～ 5 のスケールで評価します。データセットや評価指標の詳細については[Huggingface のリポジトリ](https://huggingface.co/datasets/nlp-waseda/JCQ)や[論文](https://www.anlp.jp/proceedings/annual_meeting/2025/pdf_dir/C1-2.pdf)を参照してください。ローカルでモデルを動かす際は vLLM を用います。Python 3.9.18, CUDA 12.4.1 で動作確認を行いました。それ以外のバージョンでは依存パッケージの調整が必要な場合があります。
 
 ## インストール
 
