@@ -1,7 +1,6 @@
 import argparse
 import concurrent.futures
 import json
-import os
 from pathlib import Path
 from threading import Lock
 
@@ -38,7 +37,7 @@ def get_answer(
 
     answer = {"question_id": record["id"], "answer": output}
 
-    os.makedirs(Path(answer_file).parent, exist_ok=True)
+    Path(answer_file).parent.mkdir(parents=True, exist_ok=True)
     with file_lock:
         with open(answer_file, "a", encoding="utf-8") as f:
             f.write(json.dumps(answer, ensure_ascii=False) + "\n")

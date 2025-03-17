@@ -1,9 +1,19 @@
 import argparse
-import os
 from pathlib import Path
 
 import pandas as pd
 import plotly.graph_objects as go
+
+CRITERIA = ["fluency", "flexibility", "originality", "elaboration"]
+TASKS = [
+    "unusual uses",
+    "consequences",
+    "just suppose",
+    "situation",
+    "common problem",
+    "improvement",
+    "imaginative stories",
+]
 
 
 def save_radar_chart(df, file):
@@ -42,7 +52,7 @@ def save_radar_chart(df, file):
         height=600,
     )
 
-    os.makedirs(Path(file).parent, exist_ok=True)
+    Path(file).parent.mkdir(parents=True, exist_ok=True)
     fig.write_image(file, scale=2)
     print(f"\nSaved radar chart at {file}")
 
@@ -65,51 +75,26 @@ if __name__ == "__main__":
         judgements = judgements[judgements["model"].isin(args.model_list)]
 
     df = pd.merge(questions, judgements, left_on="id", right_on="question_id")
-    df["mean"] = df[["fluency", "flexibility", "originality", "elaboration"]].mean(
-        axis=1
-    )
-    df = df[
-        [
-            "task",
-            "model",
-            "fluency",
-            "flexibility",
-            "originality",
-            "elaboration",
-            "mean",
-        ]
-    ]
+    df["mean"] = df[CRITERIA].mean(axis=1)
 
-    radar_chart_directory = "data/model_judgement/radar_chart"
+    radar_chart_directory = Path("data/model_judgement/radar_chart")
 
     print("\n########## Model and Criterion ##########")
-    result_model_criterion = df.groupby("model")[
-        ["fluency", "flexibility", "originality", "elaboration", "mean"]
-    ].mean()
+    result_model_criterion = df.groupby("model")[CRITERIA + ["mean"]].mean()
     result_model_criterion.index.name = None
     result_model_criterion.columns = result_model_criterion.columns.str.capitalize()
     print(result_model_criterion.round(2))
 
     save_radar_chart(
         result_model_criterion.drop(columns="Mean"),
-        f"{radar_chart_directory}/{args.judge_model}_model_criterion.png",
+        radar_chart_directory / f"{args.judge_model}_model_criterion.png",
     )
 
     print("\n########## Model and Task ##########")
     result_model_task = df.pivot_table(
         values="mean", index="model", columns="task", aggfunc="mean"
     )
-    result_model_task = result_model_task[
-        [
-            "unusual uses",
-            "consequences",
-            "just suppose",
-            "situation",
-            "common problem",
-            "improvement",
-            "imaginative stories",
-        ]
-    ]
+    result_model_task = result_model_task[TASKS]
     result_model_task["all"] = result_model_criterion["Mean"]
     result_model_task.index.name = None
     result_model_task.columns.name = None
@@ -118,24 +103,12 @@ if __name__ == "__main__":
 
     save_radar_chart(
         result_model_task.drop(columns="All"),
-        f"{radar_chart_directory}/{args.judge_model}_model_task.png",
+        radar_chart_directory / f"{args.judge_model}_model_task.png",
     )
 
     print("\n########## Task and Criterion ##########")
-    result_task_criterion = df.groupby("task")[
-        ["fluency", "flexibility", "originality", "elaboration", "mean"]
-    ].mean()
-    result_task_criterion = result_task_criterion.loc[
-        [
-            "unusual uses",
-            "consequences",
-            "just suppose",
-            "situation",
-            "common problem",
-            "improvement",
-            "imaginative stories",
-        ]
-    ]
+    result_task_criterion = df.groupby("task")[CRITERIA + ["mean"]].mean()
+    result_task_criterion = result_task_criterion.loc[TASKS]
     result_task_criterion.index.name = None
     result_task_criterion.index = result_task_criterion.index.str.capitalize()
     result_task_criterion.columns = result_task_criterion.columns.str.capitalize()
@@ -143,5 +116,5 @@ if __name__ == "__main__":
 
     save_radar_chart(
         result_task_criterion.drop(columns="Mean"),
-        f"{radar_chart_directory}/{args.judge_model}_task_criterion.png",
+        radar_chart_directory / f"{args.judge_model}_task_criterion.png",
     )

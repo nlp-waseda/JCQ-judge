@@ -1,6 +1,5 @@
 import argparse
 import json
-import os
 from pathlib import Path
 
 from tqdm import tqdm
@@ -52,7 +51,7 @@ def get_model_answers(
             for record, output in zip(batch, outputs)
         ]
 
-        os.makedirs(Path(answer_file).parent, exist_ok=True)
+        Path(answer_file).parent.mkdir(parents=True, exist_ok=True)
         with open(answer_file, "a", encoding="utf-8") as f:
             f.writelines(
                 [
