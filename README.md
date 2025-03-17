@@ -124,7 +124,7 @@ python show_result.py --judge_model [JUDGE_MODEL]
 - その他以下の項目を指定することができます。
   - `--model_list` (デフォルト値なし)
 
-ステップ2における`[JUDGE_MODEL]`による評価の結果が表示されます。また、レーダーチャートが`llm_judge/data/model_judgement/radar_chart/`ディレクトリに PNG 形式で保存されます。
+ステップ2における`[JUDGE_MODEL]`による評価の結果が表示されます。また、レーダーチャートが`data/model_judgement/radar_chart/`ディレクトリに PNG 形式で保存されます。
 
 例
 
