@@ -47,7 +47,7 @@ def get_judgement(
         scores = list(map(int, match.groups()))
     else:
         print(
-            f"Invalid judgement. model: {record['model']}, question_id: {record['question_id']}, {output}"
+            f"Invalid judgement: {output}, model: {record['model']}, question_id: {record['question_id']}"
         )
         scores = [None] * 4
 
