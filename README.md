@@ -99,6 +99,8 @@ python gen_api_judgement.py \
 例
 
 ```
+export OPENAI_API_KEY=XXXXXX
+
 python gen_api_judgement.py \
     --api openai \
     --judge_model gpt-4o-mini \
