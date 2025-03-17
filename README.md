@@ -100,7 +100,7 @@ python gen_api_judgement.py \
   - `--parallel`: 並列実行数を指定します（デフォルト値：1）※ API のレート制限に注意してください。
   - `--system_prompt`: モデルに対してシステムメッセージを指定できます（デフォルト値なし、例："あなたは親切な AI アシスタントです。"）
 
-`[MODEL_LIST]`で指定されたモデルのステップ1での回答に対する評価結果が`data/model_judgement/<JUDGE_MODEL>.jsonl`に保存されます。
+`[MODEL_LIST]`で指定されたモデルのステップ1での回答に対する評価が`data/model_judgement/<JUDGE_MODEL>.jsonl`に保存されます。
 
 例
 
