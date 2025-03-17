@@ -40,7 +40,7 @@ def get_judgement(
     else:
         output = chat_completion_openai(judge_model, messages, 64, 0, 1.0)
 
-    pattern = r"流暢性:\s*\[?(\d)\]?\s*柔軟性:\s*\[?(\d)\]?\s*独創性:\s*\[?(\d)\]?\s*精緻性:\s*\[?(\d)\]?"
+    pattern = r"流暢性:\s*\[?([1-5])\]?\s*柔軟性:\s*\[?([1-5])\]?\s*独創性:\s*\[?([1-5])\]?\s*精緻性:\s*\[?([1-5])\]?"
     match = re.search(pattern, output)
 
     if match:
