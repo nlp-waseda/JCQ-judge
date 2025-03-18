@@ -16,6 +16,7 @@ def get_model_answers(
     temperature,
     top_p,
     top_k,
+    repetition_penalty,
     max_tokens,
     tensor_parallel_size,
     system_prompt,
@@ -23,7 +24,11 @@ def get_model_answers(
     llm = LLM(model=model_path, tensor_parallel_size=tensor_parallel_size)
     tokenizer = llm.get_tokenizer()
     sampling_params = SamplingParams(
-        temperature=temperature, top_p=top_p, top_k=top_k, max_tokens=max_tokens
+        temperature=temperature,
+        top_p=top_p,
+        top_k=top_k,
+        repetition_penalty=repetition_penalty,
+        max_tokens=max_tokens,
     )
 
     for i in tqdm(range(0, len(data), batch_size)):
@@ -69,6 +74,7 @@ if __name__ == "__main__":
     parser.add_argument("--temperature", default=1.0, type=float)
     parser.add_argument("--top_p", default=1.0, type=float)
     parser.add_argument("--top_k", default=-1, type=int)
+    parser.add_argument("--repetition_penalty", default=1.0, type=float)
     parser.add_argument("--max_tokens", default=4096, type=int)
     parser.add_argument("--tensor_parallel_size", default=1, type=int)
     parser.add_argument("--system_prompt")
@@ -86,6 +92,7 @@ if __name__ == "__main__":
         temperature=args.temperature,
         top_p=args.top_p,
         top_k=args.top_k,
+        repetition_penalty=args.repetition_penalty,
         max_tokens=args.max_tokens,
         tensor_parallel_size=args.tensor_parallel_size,
         system_prompt=args.system_prompt,
