@@ -29,6 +29,7 @@ python gen_model_answer.py \
   - `--temperature` (デフォルト値：1.0)
   - `--top_p` (デフォルト値：1.0)
   - `--top_k` (デフォルト値：-1)
+  - `--repetition_penalty` (デフォルト値：1.0)
   - `--max_tokens` (デフォルト値：4096)
   - `--tensor_parallel_size` (デフォルト値：1)
   - `--system_prompt`: モデルに対してシステムメッセージを指定できます（デフォルト値なし、例："あなたは親切な AI アシスタントです。"）
@@ -100,7 +101,7 @@ python gen_api_judgement.py \
   - `--parallel`: 並列実行数を指定します（デフォルト値：1）※ API のレート制限に注意してください。
   - `--system_prompt`: モデルに対してシステムメッセージを指定できます（デフォルト値なし、例："あなたは親切な AI アシスタントです。"）
 
-`[MODEL_LIST]`で指定されたモデルのステップ1での回答に対する評価が`data/model_judgement/<JUDGE_MODEL>.jsonl`に保存されます。
+`[MODEL_LIST]`で指定されたモデルのステップ 1 での回答に対する評価が`data/model_judgement/<JUDGE_MODEL>.jsonl`に保存されます。
 
 例
 
@@ -124,7 +125,7 @@ python show_result.py --judge_model [JUDGE_MODEL]
 - その他以下の項目を指定することができます。
   - `--model_list` (デフォルト値なし)
 
-ステップ2における`[JUDGE_MODEL]`による評価結果が表示されます。また、レーダーチャートが`data/model_judgement/radar_chart/`ディレクトリに PNG 形式で保存されます。
+ステップ 2 における`[JUDGE_MODEL]`による評価結果が表示されます。また、レーダーチャートが`data/model_judgement/radar_chart/`ディレクトリに PNG 形式で保存されます。
 
 例
 
