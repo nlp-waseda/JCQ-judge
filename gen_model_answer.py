@@ -70,7 +70,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--model_path", required=True)
     parser.add_argument("--model_id", required=True)
-    parser.add_argument("--batch_size", default=64, type=int)
+    parser.add_argument("--batch_size", default=16, type=int)
     parser.add_argument("--temperature", default=1.0, type=float)
     parser.add_argument("--top_p", default=1.0, type=float)
     parser.add_argument("--top_k", default=-1, type=int)
