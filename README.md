@@ -25,7 +25,7 @@ python gen_model_answer.py \
 - `[MODEL_PATH]`はモデルのパスです。ローカルフォルダまたは Hugging Face のリポジトリ ID を指定してください。
 - `[MODEL_ID]`はモデルの識別名です。一意の名前を付けてください。
 - その他以下の項目を指定することができます。
-  - `--batch_size` (デフォルト値：64)
+  - `--batch_size` (デフォルト値：16)
   - `--temperature` (デフォルト値：1.0)
   - `--top_p` (デフォルト値：1.0)
   - `--top_k` (デフォルト値：-1)
