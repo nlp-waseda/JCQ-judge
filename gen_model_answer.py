@@ -10,6 +10,7 @@ from common import load_data
 
 def get_model_answers(
     model_path,
+    dtype,
     data,
     answer_file,
     batch_size,
@@ -21,7 +22,7 @@ def get_model_answers(
     tensor_parallel_size,
     system_prompt,
 ):
-    llm = LLM(model=model_path, tensor_parallel_size=tensor_parallel_size)
+    llm = LLM(model=model_path, dtype=dtype, tensor_parallel_size=tensor_parallel_size)
     tokenizer = llm.get_tokenizer()
     sampling_params = SamplingParams(
         temperature=temperature,
@@ -70,6 +71,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--model_path", required=True)
     parser.add_argument("--model_id", required=True)
+    parser.add_argument("--dtype", default="auto")
     parser.add_argument("--batch_size", default=16, type=int)
     parser.add_argument("--temperature", default=1.0, type=float)
     parser.add_argument("--top_p", default=1.0, type=float)
@@ -86,6 +88,7 @@ if __name__ == "__main__":
 
     get_model_answers(
         model_path=args.model_path,
+        dtype=args.dtype,
         data=data,
         answer_file=answer_file,
         batch_size=args.batch_size,
