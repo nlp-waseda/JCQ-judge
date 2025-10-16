@@ -82,7 +82,6 @@ async def generate_and_save(args: Args) -> None:
             raise FileExistsError(
                 f"Judgements file '{judgements_path}' already exists."
             )
-        judgements_path.parent.mkdir(parents=True, exist_ok=True)
 
         prompts = []
         for record in answers:
@@ -109,6 +108,7 @@ async def generate_and_save(args: Args) -> None:
                 )
         flat_outputs = list(chain.from_iterable(outputs))
 
+        judgements_path.parent.mkdir(parents=True, exist_ok=True)
         with open(judgements_path, "w", encoding="utf-8") as f:
             for record, output in zip(answers, flat_outputs):
                 result = {"answer_id": record["id"], "judgement": output}

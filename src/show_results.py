@@ -94,8 +94,10 @@ def _build_dataframe(args: Args) -> pd.DataFrame:
             scores = _extract_scores(record["judgement"])
             if scores[0] is None:
                 print(
-                    f"Invalid judgement, {model}, question-{question_id}, answer-{record['answer_id']}, {record['judgement']}"
+                    f"Ignoring invalid judgement: question_id={question_id}, answer_id={record['answer_id']}, judgement={record['judgement']}"
                 )
+                continue
+
             data.append(
                 {
                     "question_id": question_id,

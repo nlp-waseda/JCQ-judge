@@ -65,7 +65,6 @@ async def generate_and_save(args: Args) -> None:
 
     if args.answers_path.exists():
         raise FileExistsError(f"Answer file '{args.answers_path}' already exists.")
-    args.answers_path.parent.mkdir(parents=True, exist_ok=True)
 
     if args.provider == "openai":
         async with OpenAIGenerator(args.concurrency) as generator:
