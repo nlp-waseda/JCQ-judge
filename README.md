@@ -1,13 +1,15 @@
 # JCQ-judge
 
-Japanese Creativity Questions (JCQ)に対する LLM による回答と、LLM-as-a-judge による評価を行います。「流暢性」、「柔軟性」、「独創性」、「精緻性」の 4 指標を 1 ～ 5 のスケールで評価します。データセットや評価指標の詳細については[Huggingface のリポジトリ](https://huggingface.co/datasets/nlp-waseda/JCQ)や[論文](https://www.anlp.jp/proceedings/annual_meeting/2025/pdf_dir/C1-2.pdf)を参照してください。ローカルでモデルを動かす際は vLLM を用います。Python 3.9.18, CUDA 12.4.1 で動作確認を行いました。それ以外のバージョンでは依存パッケージの調整が必要な場合があります。
+Japanese Creativity Questions (JCQ)に対する LLM による回答と、LLM-as-a-judge による評価を行います。「流暢性」、「柔軟性」、「独創性」、「精緻性」の 4 指標を 1 ～ 5 のスケールで評価します。データセットや評価指標の詳細については[Huggingface のリポジトリ](https://huggingface.co/datasets/nlp-waseda/JCQ)や[論文](https://www.anlp.jp/proceedings/annual_meeting/2025/pdf_dir/C1-2.pdf)を参照してください。ローカルでモデルを動かす際は vLLM を用います。CUDA 12.9.1 で動作確認を行いました。それ以外のバージョンでは依存パッケージの調整が必要な場合があります。
 
 ## インストール
+
+[uv](https://docs.astral.sh/uv/)を使用します。
 
 ```
 git clone https://github.com/nlp-waseda/JCQ-judge.git
 cd JCQ-judge
-pip install -r requirements.txt
+uv sync
 ```
 
 ## 回答と評価
@@ -17,32 +19,31 @@ pip install -r requirements.txt
 #### ローカルモデル
 
 ```
-python gen_model_answer.py \
-    --model_path [MODEL_PATH] \
-    --model_id [MODEL_ID]
+uv run src/gen_local_answers.py --model [MODEL]
 ```
 
-- `[MODEL_PATH]`はモデルのパスです。ローカルフォルダまたは Hugging Face のリポジトリ ID を指定してください。
-- `[MODEL_ID]`はモデルの識別名です。一意の名前を付けてください。
-- その他以下の項目を指定することができます。
-  - `--dtype` (デフォルト値：auto)
-  - `--batch_size` (デフォルト値：16)
-  - `--temperature` (デフォルト値：1.0)
-  - `--top_p` (デフォルト値：1.0)
-  - `--top_k` (デフォルト値：-1)
-  - `--repetition_penalty` (デフォルト値：1.0)
-  - `--max_tokens` (デフォルト値：4096)
-  - `--tensor_parallel_size` (デフォルト値：1)
-  - `--system_prompt`: モデルに対してシステムメッセージを指定できます（デフォルト値なし、例："あなたは親切な AI アシスタントです。"）
+引数
 
-`data/model_answer/<MODEL_ID>.jsonl`にモデルの回答が保存されます。
+- `--model`：モデルの Hugging Face のリポジトリ ID またはローカルフォルダを指定してください。
+- `--model-id`：モデルの識別名です。指定しなかった場合は`--model`で指定された名前（スラッシュ区切りの最後の部分）が使われます。
+- `--num-choices`：1 つの質問に対する生成数です。デフォルト値は`1`。
+- `--tensor-parallel-size`：デフォルト値は`1`。
+- `--repetition-penalty`：デフォルト値は`1.0`。
+- `--temperature`：デフォルト値は`1.0`。
+- `--top-p`：デフォルト値は`1.0`。
+- `--top-k`：デフォルト値は`0`（全トークン）。
+- `--max-tokens`：デフォルト値は`4096`。
+- `--max-model-len`：デフォルト値は`4096`。
+- `--max-num-batched-tokens`：デフォルト値なし。
+- `--max-num-seqs`：デフォルト値なし。
+- `--data-dir`：データディレクトリです。デフォルト値は`data`。
+
+`data/answers/[MODEL-ID].jsonl`にモデルの回答が保存されます。
 
 例
 
 ```
-python gen_model_answer.py \
-    --model_path llm-jp/llm-jp-3-1.8b-instruct3 \
-    --model_id llm-jp-3-1.8b-instruct3
+uv run src/gen_local_answers.py --model llm-jp/llm-jp-3-3.7b-instruct3
 ```
 
 #### API
@@ -51,34 +52,40 @@ python gen_model_answer.py \
 export OPENAI_API_KEY=[OPENAI_API_KEY]
 export ANTHROPIC_API_KEY=[ANTHROPIC_API_KEY]
 
-python gen_api_answer.py \
-    --api [API] \
+uv run src/gen_api_answers.py \
+    --provider [PROVIDER] \
     --model [MODEL]
 ```
 
-- `[OPENAI_API_KEY]`は OpenAI の API キーです。使う場合は環境変数`OPENAI_API_KEY`にセットしてください。
-- `[ANTHROPIC_API_KEY]`は Anthropic の API キーです。使う場合は環境変数`ANTHROPIC_API_KEY`にセットしてください。
-- `[API]`で使う API を指定してください。`openai`か`anthropic`です。
-- `[MODEL]`でモデルを指定してください。
-- その他以下の項目を指定することができます。
-  - `--temperature` (デフォルト値：1.0)
-  - `--top_p` (デフォルト値：1.0)
-  - `--top_k` (デフォルト値：-1, OpenAI API では指定できない)
-  - `--max_tokens` (デフォルト値：4096)
-  - `--parallel`: 並列実行数を指定します（デフォルト値：1）※ API のレート制限に注意してください。
-  - `--system_prompt`: モデルに対してシステムメッセージを指定できます（デフォルト値なし、例："あなたは親切な AI アシスタントです。"）
+必要に応じて環境変数`OPENAI_API_KEY`、`ANTHROPIC_API_KEY`を設定してください。
 
-`data/model_answer/<MODEL>.jsonl`にモデルの回答が保存されます。
+引数
+
+- `--provider`：使う API のプロバイダ （`openai`か`anthropic`）を指定してください。
+- `--model`：モデルを指定してください。
+- `--model-id`：モデルの識別名です。指定しなかった場合は`--model`で指定された名前が使われます。
+- `--num-choices`：1 つの質問に対する生成数です。デフォルト値は`1`。
+- `--temperature`：デフォルト値は`1.0`。
+- `--reasoning-effort`：OpenAI API 専用の引数です。デフォルト値なし。
+- `--thinking-budget-tokens`：Anthropic API 専用の引数です。デフォルト値なし。
+- `--top-p`：デフォルト値なし。
+- `--top-k`：Anthropic API 専用の引数です。デフォルト値なし。
+- `--max-completion-tokens`：OpenAI API 専用の引数です。デフォルト値なし。
+- `--max-tokens`：Anthropic API 専用の引数です。デフォルト値は`4096`。
+- `--concurrency`：並行実行数を指定します。デフォルト値は`1`。※ API のレート制限に注意してください。
+- `--data-dir`：データディレクトリです。デフォルト値は`data`。
+
+`data/answers/[MODEL-ID].jsonl`にモデルの回答が保存されます。
 
 例
 
 ```
 export OPENAI_API_KEY=XXXXXX
 
-python gen_api_answer.py \
-    --api openai \
+uv run src/gen_api_answers.py \
+    --provider openai \
     --model gpt-4o-mini \
-    --parallel 10
+    --concurrency 10
 ```
 
 ### ステップ 2. 評価
@@ -87,56 +94,67 @@ python gen_api_answer.py \
 export OPENAI_API_KEY=[OPENAI_API_KEY]
 export ANTHROPIC_API_KEY=[ANTHROPIC_API_KEY]
 
-python gen_api_judgement.py \
-    --api [API] \
-    --judge_model [JUDGE_MODEL] \
-    --model_list [MODEL_LIST]
+uv run src/gen_api_judgements.py \
+    --provider [PROVIDER] \
+    --judge-model [JUDGE-MODEL] \
+    --models [MODELS]
 ```
 
-- `[OPENAI_API_KEY]`は OpenAI の API キーです。使う場合は環境変数`OPENAI_API_KEY`にセットしてください。
-- `[ANTHROPIC_API_KEY]`は Anthropic の API キーです。使う場合は環境変数`ANTHROPIC_API_KEY`にセットしてください。
-- `[API]`で使う API を指定してください。`openai`か`anthropic`です。
-- `[JUDGE_MODEL]`で評価モデルを指定してください。
-- `[MODEL_LIST]`で評価対象のモデルを空白区切りで指定してください。
-- その他以下の項目を指定することができます。
-  - `--parallel`: 並列実行数を指定します（デフォルト値：1）※ API のレート制限に注意してください。
-  - `--system_prompt`: モデルに対してシステムメッセージを指定できます（デフォルト値なし、例："あなたは親切な AI アシスタントです。"）
+必要に応じて環境変数`OPENAI_API_KEY`、`ANTHROPIC_API_KEY`を設定してください。
 
-`[MODEL_LIST]`で指定されたモデルのステップ 1 での回答に対する評価が`data/model_judgement/<JUDGE_MODEL>.jsonl`に保存されます。
+引数
+
+- `--provider`：使う API のプロバイダ （`openai`か`anthropic`）を指定してください。
+- `--judge-model`：評価モデルを指定してください。
+- `--judge-model-id`：評価モデルの識別名です。指定しなかった場合は`--judge-model`で指定された名前が使われます。
+- `--models`：評価対象のモデルの`[MODEL-ID]`を空白区切りで指定してください。
+- `--max-completion-tokens`：OpenAI API 専用の引数です。デフォルト値なし。
+- `--max-tokens`：Anthropic API 専用の引数です。デフォルト値は`4096`。
+- `--concurrency`：並行実行数を指定します。デフォルト値は`1`。※ API のレート制限に注意してください。
+- `--data-dir`：データディレクトリです。デフォルト値は`data`。
+
+`[MODELS]`で指定されたモデルの回答に対する評価が`data/judgements/[JUDGE-MODEL-ID]/[MODEL-ID].jsonl`に保存されます。
 
 例
 
 ```
 export OPENAI_API_KEY=XXXXXX
 
-python gen_api_judgement.py \
-    --api openai \
-    --judge_model gpt-4o-mini \
-    --model_list llm-jp-3-1.8b-instruct3 gpt-4o-mini \
-    --parallel 5
+uv run src/gen_api_judgements.py \
+    --provider openai \
+    --judge-model gpt-4o-mini \
+    --models gpt-4o-mini llm-jp-3-3.7b-instruct3 \
+    --concurrency 5
 ```
 
 ### ステップ 3. 結果の表示
 
 ```
-python show_result.py --judge_model [JUDGE_MODEL]
+uv run src/show_results.py \
+    --judge-model [JUDGE-MODEL] \
+    --models [MODELS]
 ```
 
-- `[JUDGE_MODEL]`で評価モデルを指定してください。
-- その他以下の項目を指定することができます。
-  - `--model_list` (デフォルト値なし)
+引数
 
-ステップ 2 における`[JUDGE_MODEL]`による評価結果が表示されます。また、レーダーチャートが`data/model_judgement/radar_chart/`ディレクトリに PNG 形式で保存されます。
+- `--judge-model`：評価モデルの`[JUDGE-MODEL-ID]`を指定してください。
+- `--models`：評価対象のモデルの`[MODEL-ID]`を空白区切りで指定してください。
+- `--compare`：指定すると 2 つのモデルのタスク・指標ごとの比較結果が表示されます。`[MODELS]`が 2 つの場合のみ指定できます。
+- `--data-dir`：データディレクトリです。デフォルト値は`data`。
+
+`[JUDGE-MODEL]`で指定された評価モデルによる`[MODELS]`で指定されたモデルの回答に対する評価結果が表示されます。
 
 例
 
 ```
-python show_result.py --judge_model gpt-4o-mini
+uv run src/show_results.py \
+    --judge-model gpt-4o-mini \
+    --models gpt-4o-mini llm-jp-3-3.7b-instruct3
 ```
 
 ## 評価結果
 
-いくつかのモデルの評価結果を記載します。生成時の temperature は 1、評価モデルは gpt-4o-2024-08-06 です。
+いくつかのモデルの評価結果を記載します。生成時の temperature は 1.0、評価モデルは gpt-4o-2024-08-06 です。
 
 ### モデルと指標
 

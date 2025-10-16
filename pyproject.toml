@@ -1,0 +1,14 @@
+[project]
+name = "jcq-judge"
+version = "0.1.0"
+description = "Scripts to evaluate creativity of large language models with Japanese Creativity Questions."
+readme = "README.md"
+license = { text = "Apache-2.0" }
+requires-python = ">=3.12"
+dependencies = [
+    "anthropic>=0.70.0",
+    "openai>=2.3.0",
+    "pandas>=2.3.3",
+    "tqdm>=4.67.1",
+    "vllm>=0.11.0",
+]
