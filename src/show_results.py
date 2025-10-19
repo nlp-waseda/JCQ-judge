@@ -5,8 +5,6 @@ from typing import Sequence, cast
 
 import pandas as pd
 
-from utils import load_records
-
 pd.set_option("display.width", None)
 
 CRITERIA = ["fluency", "flexibility", "originality", "elaboration"]
@@ -20,7 +18,10 @@ TASKS = [
     "imaginative stories",
 ]
 PATTERN = re.compile(
-    r"流暢性:\s*\[?([1-5])\]?\s*柔軟性:\s*\[?([1-5])\]?\s*独創性:\s*\[?([1-5])\]?\s*精緻性:\s*\[?([1-5])\]?"
+    r"流暢性:\s*\[?([1-5])\]?\s*"
+    r"柔軟性:\s*\[?([1-5])\]?\s*"
+    r"独創性:\s*\[?([1-5])\]?\s*"
+    r"精緻性:\s*\[?([1-5])\]?"
 )
 
 
@@ -50,7 +51,7 @@ class Args(Namespace):
 
         if parsed_args.compare and len(parsed_args.models) != 2:
             raise ValueError(
-                "--compare mode requires exactly 2 models to be specified with --models."
+                "--compare mode requires exactly 2 models to be specified with --models"
             )
         return parsed_args
 
@@ -67,47 +68,30 @@ class Args(Namespace):
         return self.data_dir / "judgements" / self.judge_model
 
 
-def _extract_scores(text: str) -> list[int] | list[None]:
-    match = PATTERN.search(text)
-    if match:
-        scores = list(map(int, match.groups()))
-    else:
-        scores = [None] * len(CRITERIA)
-    return scores
-
-
 def _build_dataframe(args: Args) -> pd.DataFrame:
-    questions = load_records(args.questions_path)
-    question_id2task: dict[int, str] = {
-        record["id"]: record["task"] for record in questions
-    }
-    data: list[dict[str, int | str | None]] = []
+    df_questions = pd.read_json(args.data_dir / "test.jsonl", lines=True)
+    df_questions = df_questions.rename(columns={"id": "question_id"})
+    dfs = []
     for model in args.models:
-        answers = load_records(args.answers_dir / f"{model}.jsonl")
-        answer_id2question_id: dict[int, int] = {
-            record["id"]: record["question_id"] for record in answers
-        }
-        judgements = load_records(args.judgements_dir / f"{model}.jsonl")
-        for record in judgements:
-            question_id = answer_id2question_id[record["answer_id"]]
-            task = question_id2task[question_id]
-            scores = _extract_scores(record["judgement"])
-            if scores[0] is None:
-                print(
-                    f"Ignoring invalid judgement: question_id={question_id}, answer_id={record['answer_id']}, judgement={record['judgement']}"
-                )
-                continue
+        df_answers = pd.read_json(args.answers_dir / f"{model}.jsonl", lines=True)
+        df_answers = df_answers.rename(columns={"id": "answer_id"})
+        df_judgements = pd.read_json(args.judgements_dir / f"{model}.jsonl", lines=True)
+        df_merged = df_questions.merge(df_answers).merge(df_judgements)
 
-            data.append(
-                {
-                    "question_id": question_id,
-                    "task": task,
-                    "model": model,
-                    **dict(zip(CRITERIA, scores)),
-                }
+        df_extracted = df_merged["judgement"].str.extract(PATTERN)
+        invalid_mask = df_extracted.isna().any(axis=1)
+        for idx in df_extracted[invalid_mask].index:
+            row = df_merged.loc[idx]
+            print(
+                f"Ignoring invalid judgement: question_id={row['question_id']}, "
+                f"answer_id={row['answer_id']}, judgement={row['judgement']}"
             )
-
-    df = pd.DataFrame(data)
+        df_merged[CRITERIA] = df_extracted.apply(pd.to_numeric, errors="coerce")
+        df_merged = df_merged[~invalid_mask]
+        df_merged["model"] = model
+        df_merged = df_merged[["question_id", "task", "model", *CRITERIA]]
+        dfs.append(df_merged)
+    df = pd.concat(dfs)
     df["count"] = df.groupby(["question_id", "model"]).cumcount() + 1
 
     return df

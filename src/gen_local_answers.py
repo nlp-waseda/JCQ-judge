@@ -1,16 +1,15 @@
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
-from typing import Sequence, cast
-
-from vllm import LLM, SamplingParams
-from vllm.entrypoints.chat_utils import ChatCompletionMessageParam
+from typing import Sequence
 
 from utils import load_records, save_answers
+from vllm import LLM, SamplingParams
+from vllm.entrypoints.chat_utils import ChatCompletionMessageParam
 
 
 class Args(Namespace):
     model: str
-    model_id: str
+    model_id: str | None
     num_choices: int
     tensor_parallel_size: int
     repetition_penalty: float
@@ -27,7 +26,7 @@ class Args(Namespace):
     def _create_parser(cls) -> ArgumentParser:
         parser = ArgumentParser()
         parser.add_argument("--model", required=True)
-        parser.add_argument("--model-id", default="")
+        parser.add_argument("--model-id")
         parser.add_argument("--num-choices", default=1, type=int)
         parser.add_argument("--tensor-parallel-size", default=1, type=int)
         parser.add_argument("--repetition-penalty", default=1.0, type=float)
@@ -46,7 +45,7 @@ class Args(Namespace):
         parser = cls._create_parser()
         parsed_args = parser.parse_args(args, namespace=cls())
 
-        if not parsed_args.model_id:
+        if parsed_args.model_id is None:
             parsed_args.model_id = parsed_args.model.strip("/").split("/")[-1]
         return parsed_args
 
@@ -60,14 +59,13 @@ class Args(Namespace):
 
 
 def generate_and_save(args: Args) -> None:
-    records = load_records(args.questions_path)
-    prompts = cast(
-        list[list[ChatCompletionMessageParam]],
-        [[{"role": "user", "content": record["question"]}] for record in records],
-    )
+    questions = load_records(args.questions_path)
+    prompts: list[list[ChatCompletionMessageParam]] = [
+        [{"role": "user", "content": record["question"]}] for record in questions
+    ]
 
     if args.answers_path.exists():
-        raise FileExistsError(f"Answer file '{args.answers_path}' already exists.")
+        raise FileExistsError(f"Answer file '{args.answers_path}' already exists")
 
     llm = LLM(
         model=args.model,
@@ -87,11 +85,9 @@ def generate_and_save(args: Args) -> None:
 
     outputs = llm.chat(prompts, sampling_params)
 
-    formatted_outputs = [
-        [choice.text for choice in output.outputs] for output in outputs
-    ]
+    answers = [[choice.text for choice in output.outputs] for output in outputs]
 
-    save_answers(args.answers_path, records, formatted_outputs)
+    save_answers(args.answers_path, questions, answers)
 
 
 def main() -> None:

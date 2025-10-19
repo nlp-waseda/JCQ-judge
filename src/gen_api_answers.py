@@ -9,7 +9,7 @@ from utils import AnthropicGenerator, OpenAIGenerator, load_records, save_answer
 class Args(Namespace):
     provider: Literal["openai", "anthropic"]
     model: str
-    model_id: str
+    model_id: str | None
     num_choices: int
     temperature: float
     reasoning_effort: str | None
@@ -28,7 +28,7 @@ class Args(Namespace):
             "--provider", required=True, choices=["openai", "anthropic"]
         )
         parser.add_argument("--model", required=True)
-        parser.add_argument("--model-id", default="")
+        parser.add_argument("--model-id")
         parser.add_argument("--num-choices", default=1, type=int)
         parser.add_argument("--temperature", default=1.0, type=float)
         parser.add_argument("--reasoning-effort")
@@ -46,7 +46,7 @@ class Args(Namespace):
         parser = cls._create_parser()
         parsed_args = parser.parse_args(args, namespace=cls())
 
-        if not parsed_args.model_id:
+        if parsed_args.model_id is None:
             parsed_args.model_id = parsed_args.model.strip("/").split("/")[-1]
         return parsed_args
 
@@ -60,15 +60,17 @@ class Args(Namespace):
 
 
 async def generate_and_save(args: Args) -> None:
-    records = load_records(args.questions_path)
-    prompts = [[{"role": "user", "content": record["question"]}] for record in records]
+    questions = load_records(args.questions_path)
+    prompts = [
+        [{"role": "user", "content": record["question"]}] for record in questions
+    ]
 
     if args.answers_path.exists():
-        raise FileExistsError(f"Answer file '{args.answers_path}' already exists.")
+        raise FileExistsError(f"Answer file '{args.answers_path}' already exists")
 
     if args.provider == "openai":
         async with OpenAIGenerator(args.concurrency) as generator:
-            outputs = await generator.generate_concurrently(
+            answers = await generator.generate_concurrently(
                 prompts=prompts,
                 model=args.model,
                 max_completion_tokens=args.max_completion_tokens,
@@ -79,7 +81,7 @@ async def generate_and_save(args: Args) -> None:
             )
     else:
         async with AnthropicGenerator(args.concurrency) as generator:
-            outputs = await generator.generate_concurrently(
+            answers = await generator.generate_concurrently(
                 prompts=prompts,
                 n=args.num_choices,
                 model=args.model,
@@ -90,7 +92,7 @@ async def generate_and_save(args: Args) -> None:
                 top_p=args.top_p,
             )
 
-    save_answers(args.answers_path, records, outputs)
+    save_answers(args.answers_path, questions, answers)
 
 
 def main() -> None:

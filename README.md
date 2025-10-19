@@ -34,8 +34,8 @@ uv run src/gen_local_answers.py --model [MODEL]
 - `--top-k`：デフォルト値は`0`（全トークン）。
 - `--max-tokens`：デフォルト値は`4096`。
 - `--max-model-len`：デフォルト値は`4096`。
-- `--max-num-batched-tokens`：デフォルト値なし。
-- `--max-num-seqs`：デフォルト値なし。
+- `--max-num-batched-tokens`：デフォルト値は`None`。
+- `--max-num-seqs`：デフォルト値は`None`。
 - `--data-dir`：データディレクトリです。デフォルト値は`data`。
 
 `data/answers/[MODEL-ID].jsonl`にモデルの回答が保存されます。
@@ -66,11 +66,11 @@ uv run src/gen_api_answers.py \
 - `--model-id`：モデルの識別名です。指定しなかった場合は`--model`で指定された名前が使われます。
 - `--num-choices`：1 つの質問に対する生成数です。デフォルト値は`1`。
 - `--temperature`：デフォルト値は`1.0`。
-- `--reasoning-effort`：OpenAI API 専用の引数です。デフォルト値なし。
-- `--thinking-budget-tokens`：Anthropic API 専用の引数です。デフォルト値なし。
-- `--top-p`：デフォルト値なし。
-- `--top-k`：Anthropic API 専用の引数です。デフォルト値なし。
-- `--max-completion-tokens`：OpenAI API 専用の引数です。デフォルト値なし。
+- `--reasoning-effort`：OpenAI API 専用の引数です。デフォルト値は`None`。
+- `--thinking-budget-tokens`：Anthropic API 専用の引数です。デフォルト値は`None`。
+- `--top-p`：デフォルト値は`None`。
+- `--top-k`：Anthropic API 専用の引数です。デフォルト値は`None`。
+- `--max-completion-tokens`：OpenAI API 専用の引数です。デフォルト値は`None`。
 - `--max-tokens`：Anthropic API 専用の引数です。デフォルト値は`4096`。
 - `--concurrency`：並行実行数を指定します。デフォルト値は`1`。※ API のレート制限に注意してください。
 - `--data-dir`：データディレクトリです。デフォルト値は`data`。
@@ -108,7 +108,7 @@ uv run src/gen_api_judgements.py \
 - `--judge-model`：評価モデルを指定してください。
 - `--judge-model-id`：評価モデルの識別名です。指定しなかった場合は`--judge-model`で指定された名前が使われます。
 - `--models`：評価対象のモデルの`[MODEL-ID]`を空白区切りで指定してください。
-- `--max-completion-tokens`：OpenAI API 専用の引数です。デフォルト値なし。
+- `--max-completion-tokens`：OpenAI API 専用の引数です。デフォルト値は`None`。
 - `--max-tokens`：Anthropic API 専用の引数です。デフォルト値は`4096`。
 - `--concurrency`：並行実行数を指定します。デフォルト値は`1`。※ API のレート制限に注意してください。
 - `--data-dir`：データディレクトリです。デフォルト値は`data`。

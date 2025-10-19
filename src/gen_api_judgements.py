@@ -11,7 +11,7 @@ from utils import AnthropicGenerator, OpenAIGenerator, load_records
 class Args(Namespace):
     provider: Literal["openai", "anthropic"]
     judge_model: str
-    judge_model_id: str
+    judge_model_id: str | None
     models: list[str]
     max_completion_tokens: int | None
     max_tokens: int
@@ -25,7 +25,7 @@ class Args(Namespace):
             "--provider", required=True, choices=["openai", "anthropic"]
         )
         parser.add_argument("--judge-model", required=True)
-        parser.add_argument("--judge-model-id", default="")
+        parser.add_argument("--judge-model-id")
         parser.add_argument(
             "--models",
             nargs="+",
@@ -42,7 +42,7 @@ class Args(Namespace):
         parser = cls._create_parser()
         parsed_args = parser.parse_args(args, namespace=cls())
 
-        if not parsed_args.judge_model_id:
+        if parsed_args.judge_model_id is None:
             parsed_args.judge_model_id = parsed_args.judge_model.strip("/").split("/")[
                 -1
             ]
@@ -62,7 +62,7 @@ class Args(Namespace):
 
     @property
     def judgements_dir(self) -> Path:
-        return self.data_dir / "judgements" / self.judge_model_id
+        return self.data_dir / "judgements" / str(self.judge_model_id)
 
 
 async def generate_and_save(args: Args) -> None:
@@ -79,9 +79,7 @@ async def generate_and_save(args: Args) -> None:
 
         judgements_path = args.judgements_dir / f"{model}.jsonl"
         if judgements_path.exists():
-            raise FileExistsError(
-                f"Judgements file '{judgements_path}' already exists."
-            )
+            raise FileExistsError(f"Judgements file '{judgements_path}' already exists")
 
         prompts = []
         for record in answers:

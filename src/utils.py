@@ -15,14 +15,14 @@ def load_records(file: str | Path) -> list[dict[str, Any]]:
 
 
 def save_answers(
-    path: Path, records: list[dict[str, Any]], outputs: list[list[str]]
+    path: Path, questions: list[dict[str, Any]], answers: list[list[str]]
 ) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
 
     with open(path, "w", encoding="utf-8") as f:
         answer_id = 1
-        for record, output_list in zip(records, outputs):
-            for answer in output_list:
+        for record, answer_choices in zip(questions, answers):
+            for answer in answer_choices:
                 result = {
                     "id": answer_id,
                     "question_id": record["id"],
