@@ -7,6 +7,8 @@ from anthropic import AsyncAnthropic
 from openai import AsyncOpenAI
 from tqdm.asyncio import tqdm_asyncio
 
+OPENAI_MAX_N_PER_REQUEST = 8
+
 
 def load_records(file: str | Path) -> list[dict[str, Any]]:
     with open(file, encoding="utf-8") as f:
@@ -59,8 +61,38 @@ class OpenAIGenerator:
         self, prompts: list[list[dict[str, str]]], **params: Any
     ) -> list[list[str]]:
         params = {k: v for k, v in params.items() if v is not None}
-        tasks = [self._generate(messages=messages, **params) for messages in prompts]
-        return await tqdm_asyncio.gather(*tasks)
+        n = params.get("n", 1)
+
+        if n <= OPENAI_MAX_N_PER_REQUEST:
+            tasks = [
+                self._generate(messages=messages, **params) for messages in prompts
+            ]
+            return await tqdm_asyncio.gather(*tasks)
+
+        tasks = []
+        for messages in prompts:
+            remaining = n
+            prompt_tasks = []
+            while remaining > 0:
+                current_n = min(OPENAI_MAX_N_PER_REQUEST, remaining)
+                batch_params = {**params, "n": current_n}
+                prompt_tasks.append(self._generate(messages=messages, **batch_params))
+                remaining -= current_n
+            tasks.append(prompt_tasks)
+
+        all_tasks = [task for prompt_tasks in tasks for task in prompt_tasks]
+        all_results = await tqdm_asyncio.gather(*all_tasks)
+
+        results = []
+        idx = 0
+        for prompt_tasks in tasks:
+            num_batches = len(prompt_tasks)
+            batch_results = all_results[idx : idx + num_batches]
+            combined = [content for batch in batch_results for content in batch]
+            results.append(combined)
+            idx += num_batches
+
+        return results
 
 
 class AnthropicGenerator:
