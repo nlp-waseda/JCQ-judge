@@ -67,7 +67,7 @@ class Args(Namespace):
 
 
 def _build_dataframe(args: Args) -> pd.DataFrame:
-    df_questions = pd.read_json(args.data_dir / "test.jsonl", lines=True)
+    df_questions = pd.read_json(questions_path, lines=True)
     df_questions = df_questions.rename(columns={"id": "question_id"})
     dfs = []
     for model in args.models:
