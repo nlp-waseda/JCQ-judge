@@ -1,7 +1,7 @@
 import re
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
-from typing import Sequence, cast
+from typing import Sequence
 
 import pandas as pd
 
@@ -168,11 +168,13 @@ def main(args: Args) -> None:
                     else:
                         row[model] = f"{mean_val:.2f} (±{std_val:.2f})"
 
-                mean1 = cast(
-                    float, agg_df.loc[(task, args.models[0]), (criterion, "mean")]
+                mean1 = pd.to_numeric(
+                    agg_df.loc[(task, args.models[0]), (criterion, "mean")],
+                    errors="coerce",
                 )
-                mean2 = cast(
-                    float, agg_df.loc[(task, args.models[1]), (criterion, "mean")]
+                mean2 = pd.to_numeric(
+                    agg_df.loc[(task, args.models[1]), (criterion, "mean")],
+                    errors="coerce",
                 )
                 diff = mean2 - mean1
                 row["diff"] = f"+{diff:.2f}" if diff > 0 else f"{diff:.2f}"
