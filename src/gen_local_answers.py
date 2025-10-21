@@ -2,9 +2,10 @@ from argparse import ArgumentParser, Namespace
 from pathlib import Path
 from typing import Sequence
 
-from utils import load_records, save_answers
 from vllm import LLM, SamplingParams
 from vllm.entrypoints.chat_utils import ChatCompletionMessageParam
+
+from utils import load_records, save_answers
 
 
 class Args(Namespace):
@@ -58,7 +59,7 @@ class Args(Namespace):
         return self.data_dir / "answers" / f"{self.model_id}.jsonl"
 
 
-def generate_and_save(args: Args) -> None:
+def main(args: Args) -> None:
     questions = load_records(args.questions_path)
     prompts: list[list[ChatCompletionMessageParam]] = [
         [{"role": "user", "content": record["question"]}] for record in questions
@@ -90,11 +91,7 @@ def generate_and_save(args: Args) -> None:
     save_answers(args.answers_path, questions, answers)
 
 
-def main() -> None:
+if __name__ == "__main__":
     args = Args.parse()
 
-    generate_and_save(args)
-
-
-if __name__ == "__main__":
-    main()
+    main(args)

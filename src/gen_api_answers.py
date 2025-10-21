@@ -59,7 +59,7 @@ class Args(Namespace):
         return self.data_dir / "answers" / f"{self.model_id}.jsonl"
 
 
-async def generate_and_save(args: Args) -> None:
+async def main(args: Args) -> None:
     questions = load_records(args.questions_path)
     prompts = [
         [{"role": "user", "content": record["question"]}] for record in questions
@@ -95,11 +95,7 @@ async def generate_and_save(args: Args) -> None:
     save_answers(args.answers_path, questions, answers)
 
 
-def main() -> None:
+if __name__ == "__main__":
     args = Args.parse()
 
-    asyncio.run(generate_and_save(args))
-
-
-if __name__ == "__main__":
-    main()
+    asyncio.run(main(args))

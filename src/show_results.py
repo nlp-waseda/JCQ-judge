@@ -5,8 +5,6 @@ from typing import Sequence, cast
 
 import pandas as pd
 
-pd.set_option("display.width", None)
-
 CRITERIA = ["fluency", "flexibility", "originality", "elaboration"]
 TASKS = [
     "unusual uses",
@@ -97,105 +95,103 @@ def _build_dataframe(args: Args) -> pd.DataFrame:
     return df
 
 
-def show_summary(args: Args) -> None:
+def main(args: Args) -> None:
+    pd.set_option("display.width", None)
+
     df = _build_dataframe(args)
-    df["mean"] = df[CRITERIA].mean(axis=1)
-
-    def format_mean_std(series: pd.Series) -> str:
-        mean = series.mean()
-        std = series.std()
-        if pd.isna(std):
-            return f"{mean:.2f}"
-        return f"{mean:.2f} (±{std:.2f})"
-
-    print("\n########## Model and Criterion ##########")
-    df_model_criterion = (
-        df.groupby(["model", "count"])[CRITERIA + ["mean"]]
-        .mean()
-        .groupby("model")
-        .agg(format_mean_std)
-        .reindex(args.models)
-    )
-    df_model_criterion.index.name = None
-    df_model_criterion.columns = df_model_criterion.columns.str.capitalize()
-    print(df_model_criterion)
-
-    print("\n########## Model and Task ##########")
-    df_model_task = (
-        df.groupby(["model", "task", "count"])["mean"]
-        .mean()
-        .groupby(["model", "task"])
-        .agg(format_mean_std)
-        .unstack()
-        .reindex(index=args.models, columns=TASKS)
-    )
-    df_model_task["all"] = df_model_criterion["Mean"]
-    df_model_task.index.name = None
-    df_model_task.columns = df_model_task.columns.str.capitalize()
-    print(df_model_task)
-
-    print("\n########## Task and Criterion ##########")
-    df_task_criterion = (
-        df.groupby(["task", "count"])[CRITERIA + ["mean"]]
-        .mean()
-        .groupby("task")
-        .agg(format_mean_std)
-        .reindex(TASKS)
-    )
-    df_task_criterion.index.name = None
-    df_task_criterion.columns = df_task_criterion.columns.str.capitalize()
-    print(df_task_criterion)
-
-
-def show_comparison(args: Args) -> None:
-    df = _build_dataframe(args)
-
-    agg_df: pd.DataFrame = (
-        df.groupby(["task", "model", "count"])[CRITERIA]
-        .mean()
-        .groupby(["task", "model"])
-        .agg(["mean", "std"])
-    )
-
-    results = []
-    for task in TASKS:
-        for criterion in CRITERIA:
-            row = {}
-            for model in args.models:
-                mean_val = agg_df.loc[(task, model), (criterion, "mean")]
-                std_val = agg_df.loc[(task, model), (criterion, "std")]
-                if pd.isna(std_val):
-                    row[model] = f"{mean_val:.2f}"
-                else:
-                    row[model] = f"{mean_val:.2f} (±{std_val:.2f})"
-
-            mean1 = cast(float, agg_df.loc[(task, args.models[0]), (criterion, "mean")])
-            mean2 = cast(float, agg_df.loc[(task, args.models[1]), (criterion, "mean")])
-            diff = mean2 - mean1
-            row["diff"] = f"+{diff:.2f}" if diff > 0 else f"{diff:.2f}"
-
-            results.append(row)
-
-    df_compare = pd.DataFrame(
-        results,
-        index=[
-            f"{task.capitalize()}, {criterion.capitalize()}"
-            for task in TASKS
-            for criterion in CRITERIA
-        ],
-    )
-
-    print(df_compare)
-
-
-def main() -> None:
-    args = Args.parse()
 
     if not args.compare:
-        show_summary(args)
+        df["mean"] = df[CRITERIA].mean(axis=1)
+
+        def format_mean_std(series: pd.Series) -> str:
+            mean = series.mean()
+            std = series.std()
+            if pd.isna(std):
+                return f"{mean:.2f}"
+            return f"{mean:.2f} (±{std:.2f})"
+
+        print("\n########## Model and Criterion ##########")
+        df_model_criterion = (
+            df.groupby(["model", "count"])[CRITERIA + ["mean"]]
+            .mean()
+            .groupby("model")
+            .agg(format_mean_std)
+            .reindex(args.models)
+        )
+        df_model_criterion.index.name = None
+        df_model_criterion.columns = df_model_criterion.columns.str.capitalize()
+        print(df_model_criterion)
+
+        print("\n########## Model and Task ##########")
+        df_model_task = (
+            df.groupby(["model", "task", "count"])["mean"]
+            .mean()
+            .groupby(["model", "task"])
+            .agg(format_mean_std)
+            .unstack()
+            .reindex(index=args.models, columns=TASKS)
+        )
+        df_model_task["all"] = df_model_criterion["Mean"]
+        df_model_task.index.name = None
+        df_model_task.columns = df_model_task.columns.str.capitalize()
+        print(df_model_task)
+
+        print("\n########## Task and Criterion ##########")
+        df_task_criterion = (
+            df.groupby(["task", "count"])[CRITERIA + ["mean"]]
+            .mean()
+            .groupby("task")
+            .agg(format_mean_std)
+            .reindex(TASKS)
+        )
+        df_task_criterion.index.name = None
+        df_task_criterion.columns = df_task_criterion.columns.str.capitalize()
+        print(df_task_criterion)
+
     else:
-        show_comparison(args)
+        agg_df: pd.DataFrame = (
+            df.groupby(["task", "model", "count"])[CRITERIA]
+            .mean()
+            .groupby(["task", "model"])
+            .agg(["mean", "std"])
+        )
+
+        results = []
+        for task in TASKS:
+            for criterion in CRITERIA:
+                row = {}
+                for model in args.models:
+                    mean_val = agg_df.loc[(task, model), (criterion, "mean")]
+                    std_val = agg_df.loc[(task, model), (criterion, "std")]
+                    if pd.isna(std_val):
+                        row[model] = f"{mean_val:.2f}"
+                    else:
+                        row[model] = f"{mean_val:.2f} (±{std_val:.2f})"
+
+                mean1 = cast(
+                    float, agg_df.loc[(task, args.models[0]), (criterion, "mean")]
+                )
+                mean2 = cast(
+                    float, agg_df.loc[(task, args.models[1]), (criterion, "mean")]
+                )
+                diff = mean2 - mean1
+                row["diff"] = f"+{diff:.2f}" if diff > 0 else f"{diff:.2f}"
+
+                results.append(row)
+
+        df_compare = pd.DataFrame(
+            results,
+            index=[
+                f"{task.capitalize()}, {criterion.capitalize()}"
+                for task in TASKS
+                for criterion in CRITERIA
+            ],
+        )
+
+        print(df_compare)
 
 
 if __name__ == "__main__":
-    main()
+    args = Args.parse()
+
+    main(args)
