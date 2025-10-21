@@ -67,7 +67,7 @@ class Args(Namespace):
 
 
 def _build_dataframe(args: Args) -> pd.DataFrame:
-    df_questions = pd.read_json(questions_path, lines=True)
+    df_questions = pd.read_json(args.questions_path, lines=True)
     df_questions = df_questions.rename(columns={"id": "question_id"})
     dfs = []
     for model in args.models:
@@ -95,6 +95,14 @@ def _build_dataframe(args: Args) -> pd.DataFrame:
     return df
 
 
+def _format_mean_std(series: pd.Series) -> str:
+    mean = series.mean()
+    std = series.std()
+    if pd.isna(std):
+        return f"{mean:.2f}"
+    return f"{mean:.2f} (±{std:.2f})"
+
+
 def main(args: Args) -> None:
     pd.set_option("display.width", None)
 
@@ -103,19 +111,12 @@ def main(args: Args) -> None:
     if not args.compare:
         df["mean"] = df[CRITERIA].mean(axis=1)
 
-        def format_mean_std(series: pd.Series) -> str:
-            mean = series.mean()
-            std = series.std()
-            if pd.isna(std):
-                return f"{mean:.2f}"
-            return f"{mean:.2f} (±{std:.2f})"
-
         print("\n########## Model and Criterion ##########")
         df_model_criterion = (
             df.groupby(["model", "count"])[CRITERIA + ["mean"]]
             .mean()
             .groupby("model")
-            .agg(format_mean_std)
+            .agg(_format_mean_std)
             .reindex(args.models)
         )
         df_model_criterion.index.name = None
@@ -127,7 +128,7 @@ def main(args: Args) -> None:
             df.groupby(["model", "task", "count"])["mean"]
             .mean()
             .groupby(["model", "task"])
-            .agg(format_mean_std)
+            .agg(_format_mean_std)
             .unstack()
             .reindex(index=args.models, columns=TASKS)
         )
@@ -141,7 +142,7 @@ def main(args: Args) -> None:
             df.groupby(["task", "count"])[CRITERIA + ["mean"]]
             .mean()
             .groupby("task")
-            .agg(format_mean_std)
+            .agg(_format_mean_std)
             .reindex(TASKS)
         )
         df_task_criterion.index.name = None
